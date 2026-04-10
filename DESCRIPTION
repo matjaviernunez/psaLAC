@@ -9,9 +9,13 @@ License: MIT + file LICENSE
 Imports: 
     data.table,
     dplyr,
+    ggplot2,
     janitor,
     magrittr,
+    paletteer,
     rlang,
+    scales,
+    shadowtext,
     tidyr
 Suggests: 
     testthat (>= 3.0.0)
