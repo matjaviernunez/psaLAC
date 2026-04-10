@@ -25,6 +25,12 @@ This is a basic example which shows you how to solve a common problem:
 
 ``` r
 library(psaLAC)
+#> Warning: replacing previous import 'data.table::first' by 'dplyr::first' when
+#> loading 'psaLAC'
+#> Warning: replacing previous import 'data.table::between' by 'dplyr::between'
+#> when loading 'psaLAC'
+#> Warning: replacing previous import 'data.table::last' by 'dplyr::last' when
+#> loading 'psaLAC'
 ## basic example code
 ```
 

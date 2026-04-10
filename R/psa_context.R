@@ -1,19 +1,46 @@
+#' @import data.table
+#' @import dplyr
+#' @import tidyr
+#' @import janitor
+#' @import ggplot2
+#' @import scales
+#' @import paletteer
+#' @import shadowtext
+#' @title
+#' Título.
+#' @description
+#' Descripción.
+#' @details
+#' Detalles. Detalles.
+#' @author Angel Gaibor <mat.angel.gaibor at gmail.com>
+#' @author Javier Núñez <mat.javier.nunez at gmail.com>
+#' @param data p1.
+#' @param var_pop p2.
+#' @param var_terr p3.
+#' @param var_year p4.
+#' @param var_sex p5.
+#' @param var_age p6.
+#' @param var_area p7.
+#' @param year_piramid p8.
+#'
+#' @references
+#' Gutierrez, H. A. (2009), \emph{Estrategias de muestreo: Diseno de encuestas y estimacion de parametros}. Editorial Universidad Santo Tomas.
+#' Valliant, R, et. al. (2013), \emph{Practical tools for Design and Weighting Survey Samples}. Springer
+#' @return ext_pol
+#' @export
+#'
+#' @examples
+#' psa_context(data = base_ag, var_pop = "poblacion", var_terr = NULL, var_year = "anio", var_sex = "sexo", var_age = "edad", var_area = "area", year_piramid = NULL)
+
 psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_age,
                         var_area, year_piramid = NULL) {
-  
-  require(data.table)
-  require(dplyr)
-  require(tidyr)
-  require(janitor)
-  require(ggplot2)
-  require(scales)
-  require(paletteer)
-  require(shadowtext)
-  
+
+    data.table::setDT(data)
+
   # ============================================================
   # HELPERS
   # ============================================================
-  
+
   age_labels <- function(dt) {
     dt[, age_q_e := case_when(
       age_q == 0  ~ "0-4",    age_q == 5  ~ "5-9",    age_q == 10 ~ "10-14",
@@ -24,7 +51,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
       age_q == 75 ~ "75-79",  age_q == 80 ~ "80-84",  age_q == 85 ~ "85 y más"
     )]
   }
-  
+
   calc_dep_ratio <- function(dt, group_cols) {
     dt[get(var_age) >= 0  & get(var_age) <= 14,  pop_u15   := get(var_pop), by = group_cols] %>%
       .[get(var_age) >= 65 & get(var_age) <= 100, pop_o65   := get(var_pop), by = group_cols] %>%
@@ -44,7 +71,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
       .[, .SD, .SDcols = c(group_cols, "proportion_0_14", "proportion_15_64",
                            "proportion_65_m", "dependency_ratio")]
   }
-  
+
   calc_urbanization <- function(dt, group_cols) {
     dt[, .(pop = sum(get(var_pop))), by = c(group_cols, var_area)] %>%
       pivot_wider(names_from = all_of(var_area), values_from = "pop") %>%
@@ -52,7 +79,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
       setnames(c("1", "2"), c("Urban", "Rural")) %>%
       .[, Pop_total := Urban + Rural]
   }
-  
+
   theme_psa <- function() {
     theme(
       plot.title       = element_text(size = 20, hjust = 0.5, face = "bold.italic"),
@@ -68,23 +95,23 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
       panel.background = element_blank()
     )
   }
-  
+
   # ============================================================
   # TABLAS
   # ============================================================
-  
+
   if (is.null(var_terr)) {
-    
+
     tot_pop <- data[, .(tot_pop = sum(get(var_pop), na.rm = TRUE)),
                     by = var_year] %>% setDT()
-    
+
     growth_anual_rate <- data[, .(pop_anual = sum(get(var_pop))),
                               by = var_year] %>%
       .[, pop_growth := (lead(pop_anual) - pop_anual)] %>%
       .[, mean_pop   := (lead(pop_anual) + pop_anual) / 2] %>%
       .[, .(growth_anual_rate = (pop_growth / mean_pop) * 1000), by = var_year] %>%
       .[!is.na(growth_anual_rate)]
-    
+
     age_structure <- data[, .(pop = sum(get(var_pop))),
                           by = c(var_year, var_sex, var_age)] %>%
       .[, age_q := get(var_age) - get(var_age) %% 5] %>%
@@ -92,18 +119,18 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
       age_labels() %>%
       setorderv(c(var_year, var_sex)) %>%
       .[, .SD, .SDcols = c(var_year, var_sex, "age_q_e", "pop_f")]
-    
+
     dep_ratio    <- calc_dep_ratio(copy(data), var_year)
     urbanization <- calc_urbanization(data, var_year)
-    
+
   } else {
-    
+
     tot_pop <- data[, .(tot_pop = sum(get(var_pop), na.rm = TRUE)),
                     by = c(var_year, var_terr)] %>%
       pivot_wider(names_from = var_year, values_from = "tot_pop") %>%
       setDT() %>%
       adorn_totals("row")
-    
+
     growth_anual_rate <- data[, .(pop_anual = sum(get(var_pop))),
                               by = c(var_year, var_terr)] %>%
       setorderv(var_terr) %>%
@@ -113,7 +140,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
         by = c(var_year, var_terr)] %>%
       .[!is.na(growth_anual_rate)] %>%
       pivot_wider(names_from = var_year, values_from = "growth_anual_rate")
-    
+
     age_structure <- data[, .(pop = sum(get(var_pop))),
                           by = c(var_year, var_terr, var_sex, var_age)] %>%
       .[, age_q := get(var_age) - get(var_age) %% 5] %>%
@@ -122,31 +149,31 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
       setorderv(c(var_year, var_terr, var_sex)) %>%
       .[, .SD, .SDcols = c(var_year, var_terr, var_sex, "age_q_e", "pop_f")] %>%
       pivot_wider(names_from = var_year, values_from = "pop_f")
-    
+
     dep_ratio    <- calc_dep_ratio(copy(data), c(var_year, var_terr))
     urbanization <- calc_urbanization(data, c(var_year, var_terr))
   }
-  
+
   # ============================================================
   # GRÁFICOS
   # ============================================================
-  
+
   min_year <- min(data[[var_year]], na.rm = TRUE)
   max_year <- max(data[[var_year]], na.rm = TRUE)
   year_pir <- if (is.null(year_piramid)) max_year else year_piramid
-  
+
   psa_context_graphs <- function() {
-    
+
     graphs    <- list()
     age_levels <- c("0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39",
                     "40-44","45-49","50-54","55-59","60-64","65-69","70-74",
                     "75-79","80-84","85 y más")
-    
+
     if (is.null(var_terr)) {
-      
+
       # -- G1: Población Total Nacional --
       tot_pop_mill <- copy(tot_pop)[, tot_pop_mill := tot_pop / 1000000]
-      
+
       graphs[[1]] <- ggplot(tot_pop_mill,
                             aes(x = as.factor(get(var_year)), y = tot_pop_mill,
                                 fill = as.factor(get(var_year)))) +
@@ -161,17 +188,17 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
         labs(x = "Año", y = "Población Total (millones)", title = "Población Total",
              subtitle = paste("Período", min_year, "-", max_year)) +
         theme_psa() + theme(legend.position = "none")
-      
+
       # -- G2: Población + Tasa de Crecimiento Nacional --
       tot_pop_mill <- copy(tot_pop)[, tot_pop_mill := tot_pop / 1000000]
       max_pop      <- max(tot_pop_mill$tot_pop_mill, na.rm = TRUE)
       max_rate     <- max(growth_anual_rate$growth_anual_rate, na.rm = TRUE)
       scale_factor <- (max_pop / max_rate) * 0.3
       offset       <- 50
-      
+
       # Garantizar que var_year tenga el nombre correcto en growth_anual_rate
       growth_plot  <- copy(growth_anual_rate)
-      
+
       graphs[[2]] <- ggplot(tot_pop_mill,
                             aes(x = as.factor(get(var_year)), y = tot_pop_mill,
                                 fill = as.factor(get(var_year)))) +
@@ -208,19 +235,19 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
              subtitle = paste("Período", min_year, "-", max_year)) +
         theme_psa() + theme(legend.position = "none",
                             axis.title.y.right = element_text(color = "black", size = 13))
-      
+
       # -- G3: Pirámide Nacional --
       age_struct_plot       <- copy(age_structure)
       age_struct_plot$age_q_e <- factor(age_struct_plot$age_q_e, levels = age_levels)
-      
+
       piramid <- age_struct_plot[get(var_year) == year_pir] %>%
         .[, pop_total    := sum(pop_f), by = var_year] %>%
         .[, propor_pob   := pop_f / pop_total] %>%
         .[, propor_pob_p := ifelse(get(var_sex) == 1, -propor_pob, propor_pob)]
-      
+
       lim <- max(abs(piramid$propor_pob_p))
       gap <- lim * 0.1
-      
+
       graphs[[3]] <- ggplot(piramid,
                             aes(x = age_q_e, y = propor_pob_p,
                                 fill = as.factor(get(var_sex)))) +
@@ -244,7 +271,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
         theme_psa() + theme(legend.position = "none",
                             axis.text.y = element_blank(),
                             axis.ticks  = element_blank())
-      
+
       # -- G4: Dependencia Nacional --
       graphs[[4]] <- copy(dep_ratio)[
         , bono := ifelse(dependency_ratio >= 66.7,
@@ -272,7 +299,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
              subtitle = paste("Período", min_year, "-", max_year)) +
         theme_psa() + theme(legend.position = "bottom", legend.box = "vertical",
                             axis.title.y.right = element_text(color = "black", size = 13))
-      
+
       # -- G5: Urbanización Nacional --
       urb_data <- copy(urbanization)[, .(Urban = Urban / 1000000,
                                          Rural  = Rural  / 1000000), by = var_year] %>%
@@ -280,14 +307,14 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
         setDT() %>%
         .[, .(Area, poblation, pop_tot = sum(poblation)), by = var_year] %>%
         .[, Urban_proportion := ifelse(Area == "Urban", poblation / pop_tot, NA)]
-      
+
       urban_line <- urb_data[Area == "Urban"]
       max1 <- round(max(urb_data$pop_tot), 0)
       min2 <- min(urban_line$Urban_proportion, na.rm = TRUE)
       max2 <- max(urban_line$Urban_proportion, na.rm = TRUE)
       a    <- max1 / (max2 - min2)
       b    <- -a * min2
-      
+
       graphs[[5]] <- ggplot(urb_data, aes(x = get(var_year), y = poblation, fill = Area)) +
         geom_bar(stat = "identity", position = "stack") +
         geom_line(data = urban_line,
@@ -318,12 +345,12 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
         theme_psa() + theme(legend.position = "bottom", legend.box = "vertical",
                             axis.text.x = element_text(angle = 90, size = 12),
                             axis.title  = element_text(size = 16, face = "bold"))
-      
+
     } else {
-      
+
       # -- G1: Población Total Provincial --
       n_terr <- nrow(tot_pop) - 1
-      
+
       graphs[[1]] <- tot_pop[c(1:n_terr), ] %>%
         pivot_longer(cols = -all_of(var_terr), names_to = "anio", values_to = "pop") %>%
         setDT() %>%
@@ -342,7 +369,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
              x = "Año", y = "Población (miles)") +
         theme_psa() + theme(legend.position = "none",
                             panel.grid.major.x = element_blank())
-      
+
       # -- G2: Tasa de Crecimiento Provincial --
       graphs[[2]] <- pivot_longer(growth_anual_rate, cols = -all_of(var_terr),
                                   names_to = "anio", values_to = "growth_anual") %>%
@@ -364,11 +391,11 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
              subtitle = paste("Período", min_year, "-", max_year)) +
         theme_psa() + theme(legend.position = "bottom",
                             panel.grid.major.x = element_blank())
-      
+
       # -- G3: Pirámide Provincial --
       age_struct_plot         <- copy(age_structure)
       age_struct_plot$age_q_e <- factor(age_struct_plot$age_q_e, levels = age_levels)
-      
+
       piramid_terr <- pivot_longer(age_struct_plot,
                                    cols = -all_of(c(var_terr, var_sex, "age_q_e")),
                                    names_to = "anio", values_to = "pop") %>%
@@ -377,7 +404,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
         .[, propor_pob   := pop / pop_total] %>%
         .[, propor_pob_p := ifelse(get(var_sex) == 1, -propor_pob, propor_pob)] %>%
         .[anio == as.character(year_pir)]
-      
+
       graphs[[3]] <- ggplot(piramid_terr,
                             aes(x = age_q_e, y = propor_pob_p,
                                 fill = as.factor(get(var_sex)))) +
@@ -396,7 +423,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
               axis.text.y   = element_text(vjust = 0.5, hjust = 0.5, size = 6),
               axis.title.x  = element_text(vjust = -0.8),
               panel.spacing = unit(0.8, "cm"))
-      
+
       # -- G4: Dependencia Provincial --
       graphs[[4]] <- copy(dep_ratio)[
         , bono := ifelse(dependency_ratio >= 66.7,
@@ -429,7 +456,7 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
               axis.text = element_text(size = 7, face = "italic"),
               axis.title.y.right = element_text(color = "black", size = 13),
               panel.spacing.x    = unit(0.1, "lines"))
-      
+
       # -- G5: Urbanización Provincial --
       graphs[[5]] <- copy(urbanization)[
         , `:=`(`Urban Proportion` = Urban / Pop_total,
@@ -454,18 +481,18 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
               axis.text.y   = element_text(vjust = 0.5, hjust = 0.5, size = 7),
               panel.spacing = unit(0.8, "cm"))
     }
-    
+
     return(graphs)
   }
-  
+
   graphs <- psa_context_graphs()
-  
+
   if(sum("tot_pop" %in% names(tot_pop))){
-    tot_pop = tot_pop %>% 
+    tot_pop = tot_pop %>%
       rename(pob_total = tot_pop)
   }
   if(sum("growth_anual_rate" %in% names(growth_anual_rate))){
-    growth_anual_rate = growth_anual_rate %>% 
+    growth_anual_rate = growth_anual_rate %>%
       rename(tasa_crec_anual = growth_anual_rate)
   }
   if(sum("pop_f" %in% names(age_structure))){
@@ -473,19 +500,19 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
       rename(pob = pop_f)
   }
   if(sum("proportion_0_14" %in% names(dep_ratio))){
-    dep_ratio = dep_ratio %>% 
+    dep_ratio = dep_ratio %>%
       rename(pob_0_14_porcen = proportion_0_14,
              pob_15_64_porcen = proportion_15_64,
              pob_65_mas_porcen = proportion_65_m,
              rela_dep = dependency_ratio)
   }
   if(sum("Urban" %in% names(urbanization))){
-    urbanization = urbanization %>% 
+    urbanization = urbanization %>%
       rename(pob_urb = Urban,
              pob_rur = Rural,
              pob_total = Pop_total)
   }
-  
+
   # ============================================================
   # RESULTADO
   # ============================================================
@@ -502,6 +529,6 @@ psa_context <- function(data, var_pop, var_terr = NULL, var_year, var_sex, var_a
     grafico_dependencia  = graphs[[4]],
     grafico_urbanizacion = graphs[[5]]
   )
-  
+
   return(result)
 }
