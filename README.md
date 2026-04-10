@@ -11,10 +11,12 @@ The goal of psaLAC is to …
 
 ## Installation
 
-You can install the development version of psaLAC like so:
+You can install the development version of psaLAC from
+[GitHub](https://github.com/) with:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+# install.packages("pak")
+pak::pak("matjaviernunez/psaLAC")
 ```
 
 ## Example
