@@ -2,54 +2,186 @@
 % Please edit documentation in R/psa_context.R
 \name{psa_context}
 \alias{psa_context}
-\title{Título.}
+\title{Calcular indicadores de Contexto País del Análisis de Situación Poblacional}
 \usage{
 psa_context(
   data,
-  var_pop,
-  var_terr = NULL,
-  var_year,
-  var_sex,
-  var_age,
+  var_pob,
+  var_div = NULL,
+  var_anio,
+  var_sexo,
+  var_edad,
   var_area,
-  year_piramid = NULL
+  anio_piramide = NULL
 )
 }
 \arguments{
-\item{data}{p1.}
+\item{data}{\code{data.frame} o \code{data.table} con la información
+poblacional. Debe contener al menos las columnas indicadas por
+\code{var_pob}, \code{var_anio}, \code{var_sexo}, \code{var_edad} y \code{var_area}. La
+función no agrega ni imputa registros faltantes: la base debe estar
+previamente armonizada.}
 
-\item{var_pop}{p2.}
+\item{var_pob}{\code{character} de longitud 1. Nombre de la columna en
+\code{data} que contiene la cantidad de población (\code{integer} o
+\code{numeric} no negativa).}
 
-\item{var_terr}{p3.}
+\item{var_div}{\code{character} de longitud 1 o \code{NULL}. Nombre de la
+columna que identifica el nivel territorial subnacional
+(provincia, departamento, etc.). Si es \code{NULL} (valor por defecto)
+los resultados se reportan únicamente a nivel nacional.}
 
-\item{var_year}{p4.}
+\item{var_anio}{\code{character} de longitud 1. Nombre de la columna que
+contiene el año (\code{integer}). Para el cálculo de la tasa de
+crecimiento se requieren al menos dos años consecutivos.}
 
-\item{var_sex}{p5.}
+\item{var_sexo}{\code{character} de longitud 1. Nombre de la columna que
+identifica el sexo. Debe estar codificada como \code{1} = Hombre,
+\code{2} = Mujer. La pirámide poblacional asume esta codificación.}
 
-\item{var_age}{p6.}
+\item{var_edad}{\code{character} de longitud 1. Nombre de la columna con
+la edad simple en años cumplidos (\code{integer} no negativa). La
+función la agrupa internamente en quinquenios.}
 
-\item{var_area}{p7.}
+\item{var_area}{\code{character} de longitud 1. Nombre de la columna que
+identifica el área de residencia. Debe estar codificada como
+\code{1} = Urbano, \code{2} = Rural.}
 
-\item{year_piramid}{p8.}
+\item{anio_piramide}{\code{integer} de longitud 1 o \code{NULL}. Año específico
+para graficar la pirámide poblacional. Si es \code{NULL} (valor por
+defecto), se utiliza el año máximo presente en \code{data}.}
 }
 \value{
-ext_pol
+Una \code{list} con diez elementos:
+\describe{
+\item{\code{tabla_poblacion}}{\code{data.table} con la población total por
+año (o por año y territorio).}
+\item{\code{tabla_crecimiento}}{\code{data.table} con la tasa anual de
+crecimiento por mil habitantes.}
+\item{\code{tabla_edad}}{\code{data.table} con la población por año, sexo
+y grupo quinquenal de edad.}
+\item{\code{tabla_dependencia}}{\code{data.table} con los porcentajes de
+población 0-14, 15-64, 65+ y la razón de dependencia.}
+\item{\code{tabla_urbanizacion}}{\code{data.table} con la población urbana,
+rural y total por año.}
+\item{\code{grafico_poblacion}}{\code{ggplot} de la población total.}
+\item{\code{grafico_crecimiento}}{\code{ggplot} con barras de población y
+línea de tasa de crecimiento.}
+\item{\code{grafico_edad}}{\code{ggplot} con la pirámide poblacional del
+año seleccionado.}
+\item{\code{grafico_dependencia}}{\code{ggplot} con la razón de dependencia
+y la identificación del bono demográfico.}
+\item{\code{grafico_urbanizacion}}{\code{ggplot} de población por área de
+residencia.}
+}
 }
 \description{
-Descripción.
+\code{psa_context()} genera, en una sola ejecución, el conjunto de
+indicadores macrodemográficos que conforman la sección \strong{Contexto
+País} del Análisis de Situación Poblacional (ASP) propuesto por
+UNFPA-LACRO. A partir de un \code{data.frame} (o \code{data.table}) con
+población por año, sexo, edad y área de residencia —y, opcionalmente,
+un nivel territorial subnacional— la función produce cinco tablas y
+cinco gráficos \code{ggplot2} con los siguientes indicadores:
+\enumerate{
+\item Población total (gráfico de barras).
+\item Tasa anual de crecimiento poblacional por mil habitantes
+(gráfico combinado de barras y líneas).
+\item Estructura por grupos quinquenales de edad — pirámide poblacional
+(gráfico de barras horizontales).
+\item Razón de dependencia, con identificación del período del bono
+demográfico (gráfico combinado de barras y líneas).
+\item Urbanización: población por área de residencia y proporción urbana
+(gráfico combinado de barras y líneas).
+}
+
+Cuando se proporciona \code{var_div}, todas las salidas se desagregan al
+nivel territorial indicado (provincia, departamento, región u otro),
+produciendo \code{facets} por territorio en cada gráfico.
 }
 \details{
-Detalles. Detalles.
+La función está pensada para ser ejecutada sobre una base de población
+previamente armonizada. Para cada combinación de los argumentos
+\code{var_anio}, \code{var_sexo}, \code{var_edad} y \code{var_area} se espera \strong{una única
+observación} con el conteo (o estimación) de población en
+\code{var_pob}. Si se incluye \code{var_div}, la unidad de observación
+adicional es el territorio.
+
+Cálculos clave:
+\itemize{
+\item \strong{Población total:} suma de \code{var_pob} por año (y territorio si
+aplica).
+\item \strong{Tasa de crecimiento anual:} \eqn{((P_{t+1}-P_{t}) /
+  ((P_{t+1}+P_{t})/2)) \times 1000}.
+\item \strong{Grupos quinquenales:} la edad simple se agrupa en cortes
+\code{0-4}, \code{5-9}, ..., \verb{85 y más}.
+\item \strong{Razón de dependencia:} \eqn{((Pob_{<15} + Pob_{\ge 65}) /
+  Pob_{15-64}) \times 100}. Se considera \emph{bono demográfico} cuando
+este valor es inferior a \code{66.7}.
+\item \strong{Pirámide:} se grafica la proporción de cada grupo quinquenal
+respecto del total del año seleccionado (\code{anio_piramide}).
+\item \strong{Urbanización:} se calcula la proporción de población urbana
+sobre el total año a año.
+}
+
+Validaciones (programación defensiva): antes de iniciar los cálculos
+se verifica que \code{data} no sea nulo, que sea coercible a \code{data.table}
+y que existan todas las columnas referidas por \code{var_pob}, \code{var_anio},
+\code{var_sexo}, \code{var_edad}, \code{var_area} y, si corresponde, \code{var_div}. Si
+alguna validación falla, la función se detiene con un mensaje
+explícito en español.
 }
 \examples{
-psa_context(data = base_ag, var_pop = "poblacion", var_terr = NULL, var_year = "anio", var_sex = "sexo", var_age = "edad", var_area = "area", year_piramid = NULL)
+\donttest{
+data(base_ag)
+
+# Ejecución a nivel nacional, pirámide del año más reciente disponible
+res_nacional <- psa_context(
+  data         = base_ag,
+  var_pob      = "poblacion",
+  var_div     = NULL,
+  var_anio     = "anio",
+  var_sexo      = "sexo",
+  var_edad      = "edad",
+  var_area     = "area",
+  anio_piramide = NULL
+)
+
+# Tablas
+res_nacional$tabla_poblacion
+res_nacional$tabla_dependencia
+
+# Gráficos
+res_nacional$grafico_poblacion
+res_nacional$grafico_edad
+
+# Ejecución subnacional (por div1) con pirámide del año 2020
+res_provincial <- psa_context(
+  data         = base_ag,
+  var_pob      = "poblacion",
+  var_div     = "div1",
+  var_anio     = "anio",
+  var_sexo      = "sexo",
+  var_edad      = "edad",
+  var_area     = "area",
+  anio_piramide = 2020
+)
+res_provincial$grafico_dependencia
+}
 }
 \references{
-Gutierrez, H. A. (2009), \emph{Estrategias de muestreo: Diseno de encuestas y estimacion de parametros}. Editorial Universidad Santo Tomas.
-Valliant, R, et. al. (2013), \emph{Practical tools for Design and Weighting Survey Samples}. Springer
+UNFPA-LACRO (2025). \emph{Consultoría para el desarrollo y programación
+de la librería regional en lenguaje R para la generación del Análisis
+de la Situación de Población (ASP) — Producto 2}.
+
+SNP, INEC, USFQ & UNFPA Ecuador (2025). \emph{Análisis de Situación
+Poblacional del Ecuador 2024-2025}.
+
+Naciones Unidas, Departamento de Asuntos Económicos y Sociales,
+División de Población (2024). \emph{World Population Prospects}.
 }
 \author{
-Angel Gaibor <mat.angel.gaibor at gmail.com>
+Ángel Gaibor \email{mat.angel.gaibor@gmail.com}
 
-Javier Núñez <mat.javier.nunez at gmail.com>
+Javier Núñez \email{mat.javier.nunez@gmail.com}
 }

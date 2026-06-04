@@ -2,12 +2,12 @@
 output: github_document
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- README.md se genera a partir de README.Rmd. Editar README.Rmd. -->
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment  = "#>",
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
@@ -18,38 +18,134 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of psaLAC is to ...
+**psaLAC** (Population Situation Analysis — Latin America and the
+Caribbean) es una librería en R que automatiza la generación de los
+indicadores y gráficos del **Análisis de Situación Poblacional (ASP)**
+propuesto por el Fondo de Población de las Naciones Unidas (UNFPA) para
+los países de América Latina y el Caribe.
 
-## Installation
+El paquete toma como referencia el ASP del Ecuador 2024-2025 y busca:
 
-You can install the development version of psaLAC from [GitHub](https://github.com/) with:
+- **Estandarizar** los procedimientos analíticos del ASP a nivel
+  regional.
+- **Fortalecer** las capacidades técnicas de los equipos nacionales que
+  implementan su ASP.
+- **Garantizar** comparabilidad regional, transparencia metodológica y
+  sostenibilidad técnica del proceso.
+
+Esta versión inicial (`0.0.1`) implementa la sección **Contexto País** a
+través de la función `psa_context()`. Las secciones de Dinámica
+demográfica, Salud y SSR, e Igualdad de género se incorporarán en
+versiones posteriores.
+
+## Instalación
+
+Para instalar la versión en desarrollo desde
+[GitHub](https://github.com/matjaviernunez/psaLAC):
 
 ``` r
 # install.packages("pak")
 pak::pak("matjaviernunez/psaLAC")
 ```
 
-## Example
+o bien:
 
-This is a basic example which shows you how to solve a common problem:
+``` r
+# install.packages("devtools")
+devtools::install_github("matjaviernunez/psaLAC")
+```
 
-```{r example}
+## Uso básico
+
+`psa_context()` genera, en una sola llamada, cinco tablas y cinco
+gráficos `ggplot2` con los indicadores macrodemográficos de la sección
+Contexto País: población total, tasa anual de crecimiento, estructura
+por grupos quinquenales de edad (pirámide), razón de dependencia con
+identificación del bono demográfico, y urbanización.
+
+```{r example, eval = FALSE}
 library(psaLAC)
-## basic example code
+
+# Base de población incluida en el paquete (Ecuador 2010-2035,
+# desagregada por provincia, área, sexo y edad simple).
+data(base_ag)
+
+# Ejecución a nivel nacional
+res_nac <- psa_context(
+  data         = base_ag,
+  var_pop      = "poblacion",
+  var_terr     = NULL,
+  var_year     = "anio",
+  var_sex      = "sexo",
+  var_age      = "edad",
+  var_area     = "area",
+  year_piramid = NULL
+)
+
+# Tablas
+res_nac$tabla_poblacion
+res_nac$tabla_dependencia
+
+# Gráficos
+res_nac$grafico_poblacion
+res_nac$grafico_edad
+res_nac$grafico_dependencia
+
+# Ejecución subnacional (por provincia)
+res_prov <- psa_context(
+  data         = base_ag,
+  var_pop      = "poblacion",
+  var_terr     = "provincia",
+  var_year     = "anio",
+  var_sex      = "sexo",
+  var_age      = "edad",
+  var_area     = "area",
+  year_piramid = 2020
+)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## Insumos esperados
 
-```{r cars}
-summary(cars)
+`psa_context()` requiere un `data.frame` (o `data.table`) con, al menos,
+las siguientes columnas:
+
+| Columna     | Tipo      | Descripción                                              |
+|-------------|-----------|----------------------------------------------------------|
+| `anio`      | integer   | Año calendario.                                          |
+| `sexo`      | integer   | `1` = Hombre, `2` = Mujer.                               |
+| `edad`      | integer   | Edad simple (0 a 85+).                                   |
+| `area`      | integer   | `1` = Urbano, `2` = Rural.                               |
+| `poblacion` | numeric   | Población en la combinación año-sexo-edad-área.          |
+| `provincia` | integer   | (Opcional) Territorio subnacional para desagregación.    |
+
+## Dependencias
+
+`psaLAC` se apoya en los siguientes paquetes: `data.table`, `dplyr`,
+`tidyr`, `janitor`, `ggplot2`, `scales`, `paletteer`, `shadowtext`,
+`magrittr` y `rlang`. Las pruebas unitarias usan `testthat (>= 3.0.0)`.
+
+## Documentación
+
+Una vez instalado, dentro de R puede consultarse la ayuda completa de
+cualquier función con:
+
+``` r
+?psa_context
+?base_ag
+help(package = "psaLAC")
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+## Soporte y reporte de errores
 
-You can also embed plots, for example:
+Para reportar bugs o sugerir nuevos indicadores, abrir un *issue* en el
+repositorio:
+[https://github.com/matjaviernunez/psaLAC/issues](https://github.com/matjaviernunez/psaLAC/issues)
 
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
+## Créditos
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+Desarrollado en el marco de la consultoría UNFPA-LACRO para la librería
+regional del ASP. Autores: Javier Núñez (mantenedor) y Ángel Gaibor.
+
+## Licencia
+
+MIT — ver archivo `LICENSE`.

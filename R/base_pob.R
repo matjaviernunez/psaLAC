@@ -1,23 +1,24 @@
-#' Base de población de ejemplo para psaLAC
+#' Base de población de referencia para psaLAC
 #'
 #' @description
 #' Conjunto de datos de población proyectada para Ecuador, desagregada
 #' por año, primera división territorial (`div1`), área de residencia,
-#' sexo y edad simple. Sirve como insumo de referencia para ejecutar y
-#' probar las funciones del paquete `psaLAC` sin necesidad de cargar
-#' archivos externos.
+#' sexo y edad simple. Sirve como denominador poblacional en el cálculo
+#' de los indicadores de `psa_dinam_demogra()` (tasas de fecundidad,
+#' mortalidad y migración).
 #'
-#' La base proviene de los tabulados provinciales de edad simple
-#' (1990-2035, revisión 2024) elaborados a partir de las proyecciones
-#' de población del Ecuador. Se conserva el subconjunto 2010-2035 para
-#' mantener un tamaño manejable y reflejar el período más reciente.
+#' A diferencia de `base_ag`, esta base cubre las 24 provincias del
+#' Ecuador y utiliza los mismos nombres de columna que los argumentos
+#' por defecto de `psa_dinam_demogra()` (`var_anio = "anio"`,
+#' `var_pob = "poblacion"`, etc.), facilitando su uso directo sin
+#' necesidad de renombrar columnas.
 #'
 #' @format Un `data.frame` con 214,656 filas y 6 columnas:
 #' \describe{
 #'   \item{anio}{`integer`. Año calendario. Rango: 2010-2035.}
 #'   \item{div1}{`integer`. Código numérico de la primera división
-#'         territorial (provincia) del Ecuador (1 a 24), siguiendo la
-#'         codificación oficial del INEC.}
+#'         territorial (provincia) del Ecuador (1 a 24), siguiendo
+#'         la codificación oficial del INEC.}
 #'   \item{area}{`integer`. Área de residencia: `1` = Urbano,
 #'         `2` = Rural.}
 #'   \item{sexo}{`integer`. Sexo registrado al nacer: `1` = Hombre,
@@ -31,15 +32,15 @@
 #' @source Tabulados provinciales de edad simple 1990-2035, revisión
 #'   2024. Instituto Nacional de Estadística y Censos (INEC), Ecuador.
 #'
-#' @usage data(base_ag)
+#' @usage data(base_pob)
 #'
 #' @examples
-#' data(base_ag)
-#' head(base_ag)
+#' data(base_pob)
+#' head(base_pob)
 #' # Población total nacional por año
-#' aggregate(poblacion ~ anio, data = base_ag, FUN = sum)
+#' aggregate(poblacion ~ anio, data = base_pob, FUN = sum)
 #'
 #' @keywords datasets
 #' @docType data
-#' @name base_ag
+#' @name base_pob
 NULL

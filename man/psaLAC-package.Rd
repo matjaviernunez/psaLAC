@@ -4,12 +4,63 @@
 \name{psaLAC-package}
 \alias{psaLAC}
 \alias{psaLAC-package}
-\title{psaLAC: Función prueba psaLAC}
+\title{psaLAC: Análisis de Situación Poblacional para América Latina y el Caribe}
 \description{
-Un paquete para calcular el análisis de situación poblacional. Mi mamá me mima. Mi papá me ama.
+El paquete \code{psaLAC} sistematiza, en una librería de R, los cálculos y
+visualizaciones requeridos para elaborar el \strong{Análisis de Situación
+Poblacional (ASP)} propuesto por el Fondo de Población de las Naciones
+Unidas (UNFPA) para los países de América Latina y el Caribe. Toma como
+referencia el ASP Ecuador 2024-2025 y busca estandarizar los
+procedimientos analíticos, fortalecer las capacidades técnicas
+nacionales y garantizar comparabilidad regional y transparencia
+metodológica.
+}
+\details{
+El ASP regional se estructura en cuatro grandes secciones, cada una
+implementada como una función especializada del paquete:
+\itemize{
+\item \strong{Contexto del país} — \code{\link[=psa_context]{psa_context()}} (incluida en esta versión).
+\item \strong{Dinámica demográfica} — \code{\link[=psa_dinam_demogra]{psa_dinam_demogra()}} (incluida en esta versión).
+\item \strong{Salud y Salud Sexual y Reproductiva} (\code{psa_health()}, en
+desarrollo).
+\item \strong{Igualdad de género} (\code{psa_gender()}, en desarrollo).
+}
+
+Cada función devuelve un objeto tipo lista con las tablas y los
+gráficos asociados a sus indicadores, listos para integrarse en
+informes RMarkdown.
+}
+\section{Datos de ejemplo}{
+
+El paquete incluye el conjunto \link{base_ag}, con población proyectada
+por año, primera división territorial (\code{div1}), área de residencia, sexo y edad simple, útil para
+probar las funciones sin necesidad de insumos externos.
+}
+
+\references{
+UNFPA-LACRO (2025). \emph{Consultoría para el desarrollo y programación de
+la librería regional en lenguaje R para la generación del Análisis de
+la Situación de Población (ASP)}.
+
+SNP, INEC, USFQ & UNFPA Ecuador (2025). \emph{Análisis de Situación
+Poblacional del Ecuador 2024-2025}.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/matjaviernunez/psaLAC}
+  \item Report bugs at \url{https://github.com/matjaviernunez/psaLAC/issues}
+}
+
 }
 \author{
-\strong{Maintainer}: Javier Nuñez \email{mat.javier.nunez@gmail.com}
+\strong{Maintainer}: Javier Núñez \email{mat.javier.nunez@gmail.com}
+
+Authors:
+\itemize{
+  \item Javier Núñez \email{mat.javier.nunez@gmail.com}
+  \item Angel Gaibor \email{mat.angel.gaibor@gmail.com}
+}
 
 }
 \keyword{internal}
