@@ -1,6 +1,6 @@
 Package: psaLAC
 Title: Análisis de Situación Poblacional para América Latina y el Caribe
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Javier", "Núñez", , "mat.javier.nunez@gmail.com",
            role = c("aut", "cre")),
