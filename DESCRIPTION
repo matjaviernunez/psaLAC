@@ -1,29 +1,42 @@
 Package: psaLAC
-Title: Función prueba psaLAC
-Version: 0.0.1
-Authors@R: 
-    person("Javier", "Nuñez", , "mat.javier.nunez@gmail.com", role = c("aut", "cre"))
-Description: Un paquete para calcular el análisis de situación
-    poblacional. Mi mamá me mima. Mi papá me ama.
+Title: Análisis de Situación Poblacional para América Latina y el Caribe
+Version: 0.1.0
+Authors@R: c(
+    person("Javier", "Núñez", , "mat.javier.nunez@gmail.com",
+           role = c("aut", "cre")),
+    person("Angel", "Gaibor", , "mat.angel.gaibor@gmail.com",
+           role = "aut"))
+Description: Librería para automatizar la generación de los principales
+    indicadores y gráficos del Análisis de Situación Poblacional (ASP),
+    desarrollada en el marco de la consultoría regional UNFPA-LACRO.
+    En su versión 0.0.1 implementa la sección de Contexto País mediante
+    la función 'psa_context()', que produce, a partir de un conjunto de
+    datos poblacionales por año, sexo, edad y área de residencia (con
+    desagregación nacional o subnacional opcional), los indicadores:
+    población total, tasa anual de crecimiento, estructura por grupos
+    quinquenales de edad (pirámide poblacional), razón de dependencia
+    con identificación del bono demográfico, y proporción urbana/rural.
+    Cada indicador se entrega como tabla y como gráfico listo para
+    reportería.
 License: MIT + file LICENSE
-Imports: 
+URL: https://github.com/matjaviernunez/psaLAC
+BugReports: https://github.com/matjaviernunez/psaLAC/issues
+Imports:
     data.table,
     dplyr,
     ggplot2,
     janitor,
-    magrittr,
     paletteer,
-    rlang,
     scales,
     shadowtext,
     tidyr
-Suggests: 
+Suggests:
     testthat (>= 3.0.0)
 Encoding: UTF-8
 Language: es
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-Depends: 
+Depends:
     R (>= 3.5)
 LazyData: true
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
